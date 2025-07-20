@@ -18,123 +18,158 @@ const ClientLetterModal: React.FC<ClientLetterModalProps> = ({ trade, onClose })
       <head>
         <title>Client Trade Confirmation - ${trade.tradeId}</title>
         <style>
-          body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-          .header { text-align: center; margin-bottom: 30px; }
-          .logo { color: #6366f1; font-size: 24px; font-weight: bold; }
+          body { font-family: Arial, sans-serif; margin: 0; padding: 20px; line-height: 1.6; }
+          .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #1e40af; padding-bottom: 20px; }
+          .logo { color: #1e40af; font-size: 28px; font-weight: bold; margin-bottom: 10px; }
           .content { max-width: 800px; margin: 0 auto; }
-          .section { margin: 20px 0; }
-          .field { margin: 10px 0; display: flex; justify-content: space-between; }
-          .label { font-weight: bold; }
-          .value { text-align: right; }
-          .footer { margin-top: 40px; font-size: 12px; color: #666; }
+          .section { margin: 30px 0; }
+          .table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+          .table th, .table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+          .table th { background-color: #f8f9fa; font-weight: bold; }
+          .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 14px; color: #666; }
+          .contact-box { background-color: #f0f4ff; padding: 15px; border-radius: 5px; margin-top: 20px; }
         </style>
       </head>
       <body>
         <div class="content">
           <div class="header">
-            <div class="logo">RAYMOND JAMES®</div>
-            <p>Trade Confirmation - Account # 12345678</p>
-            <p>July 13, 2011</p>
-            <p>Jane Doe, CFP®</p>
-            <p>Raymond James & Associates, Inc.</p>
-            <p>1234 West Street</p>
-            <p>Anywhere, FL 12345-6789</p>
-            <p>(123) 456-7890</p>
-            <p>janedoe@raymondjames.com</p>
+            <div class="logo">BARCLAYS</div>
+            <p style="margin: 0; color: #666;">Trade Confirmation Department</p>
           </div>
           
-          <h2>Client Trade Confirmation - Account # 12345678</h2>
-          <p>These transactions were executed in a non-managed, non-fee-based account. Commissions are charged for individual transactions.</p>
-          
           <div class="section">
-            <h3>Trade Details</h3>
-            <div class="field">
-              <span class="label">Trade Reference:</span>
-              <span class="value">${trade.tradeId}</span>
-            </div>
-            <div class="field">
-              <span class="label">Trade Date:</span>
-              <span class="value">${isEquityTrade ? (trade as EquityTrade).tradeDate : (trade as FXTrade).tradeDate}</span>
-            </div>
-            <div class="field">
-              <span class="label">Settlement Date:</span>
-              <span class="value">${isEquityTrade ? (trade as EquityTrade).settlementDate : (trade as FXTrade).settlementDate}</span>
-            </div>
+            <h2 style="color: #1e40af;">Client Document</h2>
+            <p><strong>Issued by:</strong> Barclays</p>
+            <p><strong>Trade Confirmation Department</strong></p>
+            <br>
+            <p>This document provides formal confirmation of the trade executed on your behalf, with detailed information as below.</p>
+          </div>
+
+          <div class="section">
+            <h3 style="color: #1e40af;">Trade Summary</h3>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Trade Reference</td>
+                  <td>${trade.tradeId}</td>
+                </tr>
+                ${isEquityTrade ? `
+                <tr>
+                  <td>Order Reference</td>
+                  <td>${(trade as EquityTrade).orderId}</td>
+                </tr>
+                ` : ''}
+                <tr>
+                  <td>Trade Date</td>
+                  <td>${isEquityTrade ? (trade as EquityTrade).tradeDate : (trade as FXTrade).tradeDate}</td>
+                </tr>
+                <tr>
+                  <td>Settlement Date</td>
+                  <td>${isEquityTrade ? (trade as EquityTrade).settlementDate : (trade as FXTrade).settlementDate}</td>
+                </tr>
+                ${isEquityTrade ? `
+                <tr>
+                  <td>Client Name/Institution</td>
+                  <td>Client Account ${(trade as EquityTrade).clientId}</td>
+                </tr>
+                ` : `
+                <tr>
+                  <td>Client Name/Institution</td>
+                  <td>Trader ${(trade as FXTrade).traderId}</td>
+                </tr>
+                `}
+                <tr>
+                  <td>Counterparty</td>
+                  <td>${trade.counterparty}</td>
+                </tr>
+                ${isEquityTrade ? `
+                <tr>
+                  <td>Trading Venue</td>
+                  <td>${(trade as EquityTrade).tradingVenue}</td>
+                </tr>
+                <tr>
+                  <td>Country</td>
+                  <td>${(trade as EquityTrade).countryOfTrade}</td>
+                </tr>
+                ` : `
+                <tr>
+                  <td>Currency Pair</td>
+                  <td>${(trade as FXTrade).currencyPair}</td>
+                </tr>
+                <tr>
+                  <td>Product Type</td>
+                  <td>${(trade as FXTrade).productType}</td>
+                </tr>
+                `}
+              </tbody>
+            </table>
           </div>
 
           ${isEquityTrade ? `
-            <div class="section">
-              <h3>Equity Transaction</h3>
-              <div class="field">
-                <span class="label">Symbol:</span>
-                <span class="value">ABC</span>
-              </div>
-              <div class="field">
-                <span class="label">Number of Shares:</span>
-                <span class="value">${(trade as EquityTrade).quantity.toLocaleString()}</span>
-              </div>
-              <div class="field">
-                <span class="label">Net Amount:</span>
-                <span class="value">${(trade as EquityTrade).currency} ${(trade as EquityTrade).tradeValue.toLocaleString()}</span>
-              </div>
-              <div class="field">
-                <span class="label">Amount per Share:</span>
-                <span class="value">${(trade as EquityTrade).currency} ${(trade as EquityTrade).price.toFixed(2)}</span>
-              </div>
-              <div class="field">
-                <span class="label">Price per Share:</span>
-                <span class="value">${(trade as EquityTrade).currency} ${(trade as EquityTrade).price.toFixed(2)}</span>
-              </div>
-            </div>
+          <div class="section">
+            <h3 style="color: #1e40af;">Trade Details</h3>
+            <table class="table">
+              <tbody>
+                <tr>
+                  <td>Transaction Type</td>
+                  <td>${(trade as EquityTrade).tradeType}</td>
+                </tr>
+                <tr>
+                  <td>Quantity</td>
+                  <td>${(trade as EquityTrade).quantity.toLocaleString()} shares</td>
+                </tr>
+                <tr>
+                  <td>Price per Share</td>
+                  <td>${(trade as EquityTrade).currency} ${(trade as EquityTrade).price.toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td>Total Trade Value</td>
+                  <td>${(trade as EquityTrade).currency} ${(trade as EquityTrade).tradeValue.toLocaleString()}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
           ` : `
-            <div class="section">
-              <h3>FX Transaction</h3>
-              <div class="field">
-                <span class="label">Currency Pair:</span>
-                <span class="value">${(trade as FXTrade).currencyPair}</span>
-              </div>
-              <div class="field">
-                <span class="label">Transaction Type:</span>
-                <span class="value">${(trade as FXTrade).buySell}</span>
-              </div>
-              <div class="field">
-                <span class="label">Product Type:</span>
-                <span class="value">${(trade as FXTrade).productType}</span>
-              </div>
-            </div>
+          <div class="section">
+            <h3 style="color: #1e40af;">FX Trade Details</h3>
+            <table class="table">
+              <tbody>
+                <tr>
+                  <td>Transaction Type</td>
+                  <td>${(trade as FXTrade).buySell}</td>
+                </tr>
+                <tr>
+                  <td>Base Currency</td>
+                  <td>${(trade as FXTrade).baseCurrency}</td>
+                </tr>
+                <tr>
+                  <td>Term Currency</td>
+                  <td>${(trade as FXTrade).termCurrency}</td>
+                </tr>
+                <tr>
+                  <td>Dealt Currency</td>
+                  <td>${(trade as FXTrade).dealtCurrency}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
           `}
 
-          <div class="section">
-            <h3>Trade Calculation</h3>
-            <div class="field">
-              <span class="label">Trade Commission:</span>
-              <span class="value">$51.32</span>
-            </div>
-            <div class="field">
-              <span class="label">Processing Fee:</span>
-              <span class="value">$4.95</span>
-            </div>
-            <div class="field">
-              <span class="label">Fee:</span>
-              <span class="value">$1.32</span>
-            </div>
-            <div class="field">
-              <span class="label">Net Amount:</span>
-              <span class="value">${isEquityTrade ? (trade as EquityTrade).currency + ' ' + (trade as EquityTrade).tradeValue.toLocaleString() : 'USD 51,020.00'}</span>
-            </div>
-          </div>
-
-          <div class="section">
-            <h3>Additional Information</h3>
-            <p><strong>CAPACITY:</strong> Raymond James & Associates, Inc. executed this transaction as agent.</p>
-            <p><strong>UNSOLICITED TRANSACTION:</strong> This transaction was executed on an unsolicited basis.</p>
-            <p><strong>AVERAGE PRICE TRADE:</strong> The execution price for this transaction is an average price.</p>
+          <div class="contact-box">
+            <p><strong>For any queries regarding this confirmation, please contact:</strong></p>
+            <p>Client Services Desk or contact your relationship manager</p>
           </div>
 
           <div class="footer">
-            <p>Please refer to the Understanding your Confirmation page for additional information.</p>
-            <p>Account carried by Raymond James & Associates, Inc. | Member New York Stock Exchange/SIPC</p>
-            <p>880 Carillon Parkway | St. Petersburg, Florida 33716 | 727.567.1000 | raymondjames.com</p>
+            <p>This confirmation is issued in accordance with the terms and conditions governing trading relationships.</p>
+            <p>Document generated on: ${new Date().toLocaleDateString()}</p>
+            <p>Reference: ${trade.tradeId}-CLIENT</p>
           </div>
         </div>
       </body>
@@ -156,15 +191,15 @@ const ClientLetterModal: React.FC<ClientLetterModalProps> = ({ trade, onClose })
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-indigo-50">
+        <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-blue-50">
           <div className="flex items-center space-x-3">
-            <Building className="w-6 h-6 text-indigo-600" />
-            <h2 className="text-xl font-bold text-indigo-900">Client Trade Confirmation</h2>
+            <Building className="w-6 h-6 text-blue-600" />
+            <h2 className="text-xl font-bold text-blue-900">Client Trade Confirmation</h2>
           </div>
           <div className="flex space-x-2">
             <button
               onClick={handleDownloadPDF}
-              className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
               <Download className="w-4 h-4" />
               <span>Download PDF</span>
@@ -180,148 +215,236 @@ const ClientLetterModal: React.FC<ClientLetterModalProps> = ({ trade, onClose })
 
         <div className="p-8 bg-white">
           {/* Header */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-8 border-b-2 border-blue-600 pb-6">
             <div className="flex items-center justify-center space-x-2 mb-4">
-              <Building className="w-8 h-8 text-indigo-600" />
-              <h1 className="text-3xl font-bold text-indigo-900">RAYMOND JAMES®</h1>
+              <Building className="w-8 h-8 text-blue-600" />
+              <h1 className="text-4xl font-bold text-blue-900">BARCLAYS</h1>
             </div>
-            <div className="text-right text-sm text-gray-600 mb-4">
-              <p>July 13, 2011</p>
-              <p>Trade Confirmation - Account # 12345678</p>
-            </div>
-            <div className="text-right text-sm text-gray-600">
-              <p><strong>Jane Doe, CFP®</strong></p>
-              <p>Raymond James & Associates, Inc.</p>
-              <p>1234 West Street</p>
-              <p>Anywhere, FL 12345-6789</p>
-              <p>(123) 456-7890</p>
-              <p>janedoe@raymondjames.com</p>
-            </div>
+            <p className="text-gray-600 text-lg">Trade Confirmation Department</p>
           </div>
 
-          <hr className="border-gray-300 mb-6" />
-
-          {/* Client Services Info */}
-          <div className="bg-gray-50 p-4 rounded-lg mb-6">
-            <div className="text-center">
-              <p className="font-bold">Raymond James Client Services</p>
-              <p>800.647.SERV (7378)</p>
-              <p>Monday - Friday 8 a.m. to 6 p.m. ET</p>
-              <p><strong>Online Account Access</strong></p>
-              <p>raymondjames.com/investoraccess</p>
+          {/* Client Document Section */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-blue-900 mb-4">Client Document</h2>
+            <div className="space-y-2 mb-6">
+              <p><strong>Issued by:</strong> Barclays</p>
+              <p><strong>Trade Confirmation Department</strong></p>
             </div>
-          </div>
-
-          {/* Main Content */}
-          <div className="mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
-              John & Ellen Client's Trade Confirmation - Account # 12345678
-            </h2>
-            <p className="text-sm text-gray-600 mb-4">
-              These transactions were executed in a non-managed, non-fee-based account. Commissions are charged for individual transactions.
+            <p className="text-gray-700 leading-relaxed">
+              This document provides formal confirmation of the trade executed on your behalf, with detailed information as below.
             </p>
           </div>
 
-          {/* Trade Details Table */}
-          <div className="bg-blue-50 p-6 rounded-lg mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-lg font-bold">Equities</span>
-              <span className="bg-blue-100 px-3 py-1 rounded text-blue-800 font-bold">EQ</span>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Left Column */}
-              <div className="space-y-4">
-                <div className="bg-blue-100 p-4 rounded">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="bg-blue-600 text-white px-3 py-1 rounded font-bold">
-                      {isEquityTrade ? (trade as EquityTrade).tradeType : (trade as FXTrade).buySell}
-                    </span>
-                    <span className="text-2xl font-bold">3</span>
-                  </div>
-                  <p className="font-bold">ABC CORPORATION (Symbol: ABC)</p>
-                  <div className="grid grid-cols-2 gap-4 mt-4">
-                    <div>
-                      <p className="text-sm font-medium">Number of Shares:</p>
-                      <p className="font-bold">{isEquityTrade ? (trade as EquityTrade).quantity.toLocaleString() : '2,000,000'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Net Amount:</p>
-                      <p className="font-bold">{isEquityTrade ? (trade as EquityTrade).currency + ' ' + (trade as EquityTrade).tradeValue.toLocaleString() : '$51,020.00'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Amount per Share:</p>
-                      <p className="font-bold">{isEquityTrade ? (trade as EquityTrade).currency + ' ' + (trade as EquityTrade).price.toFixed(2) : '$25.51'}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Trade:</span>
-                    <span>1 of 4</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Trade Commission:</span>
-                    <span>$51.32</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Processing Fee:</span>
-                    <span>$4.95</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Fee:</span>
-                    <span>$1.32</span>
-                  </div>
-                  <div className="flex justify-between font-bold">
-                    <span>Net Amount:</span>
-                    <span>{isEquityTrade ? (trade as EquityTrade).currency + ' ' + (trade as EquityTrade).tradeValue.toLocaleString() : '$51,020.00'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Price per Share:</span>
-                    <span>{isEquityTrade ? (trade as EquityTrade).currency + ' ' + (trade as EquityTrade).price.toFixed(2) : '$25.63'}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Column */}
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-medium">CUSIP:</p>
-                  <p>789456123</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Trade Date:</p>
-                  <p>{isEquityTrade ? (trade as EquityTrade).tradeDate : (trade as FXTrade).tradeDate}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Settlement Date:</p>
-                  <p>{isEquityTrade ? (trade as EquityTrade).settlementDate : (trade as FXTrade).settlementDate}</p>
-                </div>
-
-                <div className="bg-yellow-50 p-3 rounded text-sm">
-                  <p><strong>CAPACITY:</strong> Raymond James & Associates, Inc. executed this transaction as agent.</p>
-                  <p><strong>UNSOLICITED TRANSACTION:</strong> This transaction was executed on an unsolicited basis.</p>
-                  <p><strong>AVERAGE PRICE TRADE:</strong> The execution price for this transaction is an average price.</p>
-                </div>
-              </div>
+          {/* Trade Summary Table */}
+          <div className="mb-8">
+            <h3 className="text-xl font-bold text-blue-900 mb-4">Trade Summary</h3>
+            <div className="overflow-x-auto">
+              <table className="min-w-full border border-gray-300">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 border-b border-gray-300">
+                      Field
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 border-b border-l border-gray-300">
+                      Details
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  <tr>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-300">
+                      Trade Reference
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {trade.tradeId}
+                    </td>
+                  </tr>
+                  {isEquityTrade && (
+                    <tr>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-300">
+                        Order Reference
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        {(trade as EquityTrade).orderId}
+                      </td>
+                    </tr>
+                  )}
+                  <tr>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-300">
+                      Trade Date
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {isEquityTrade ? (trade as EquityTrade).tradeDate : (trade as FXTrade).tradeDate}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-300">
+                      Settlement Date
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {isEquityTrade ? (trade as EquityTrade).settlementDate : (trade as FXTrade).settlementDate}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-300">
+                      Client Name/Institution
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {isEquityTrade ? `Client Account ${(trade as EquityTrade).clientId}` : `Trader ${(trade as FXTrade).traderId}`}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-300">
+                      Counterparty
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {trade.counterparty}
+                    </td>
+                  </tr>
+                  {isEquityTrade ? (
+                    <>
+                      <tr>
+                        <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-300">
+                          Trading Venue
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-700">
+                          {(trade as EquityTrade).tradingVenue}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-300">
+                          Country
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-700">
+                          {(trade as EquityTrade).countryOfTrade}
+                        </td>
+                      </tr>
+                    </>
+                  ) : (
+                    <>
+                      <tr>
+                        <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-300">
+                          Currency Pair
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-700">
+                          {(trade as FXTrade).currencyPair}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-300">
+                          Product Type
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-700">
+                          {(trade as FXTrade).productType}
+                        </td>
+                      </tr>
+                    </>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
 
-          {/* Additional Information */}
-          <div className="text-sm text-gray-600 mb-6">
-            <p className="mb-2">Please refer to the Understanding your Confirmation page for additional information.</p>
+          {/* Trade Details */}
+          {isEquityTrade ? (
+            <div className="mb-8">
+              <h3 className="text-xl font-bold text-blue-900 mb-4">Trade Details</h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full border border-gray-300">
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    <tr>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-300">
+                        Transaction Type
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        {(trade as EquityTrade).tradeType}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-300">
+                        Quantity
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        {(trade as EquityTrade).quantity.toLocaleString()} shares
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-300">
+                        Price per Share
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        {(trade as EquityTrade).currency} {(trade as EquityTrade).price.toFixed(2)}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-300">
+                        Total Trade Value
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700 font-bold">
+                        {(trade as EquityTrade).currency} {(trade as EquityTrade).tradeValue.toLocaleString()}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+            <div className="mb-8">
+              <h3 className="text-xl font-bold text-blue-900 mb-4">FX Trade Details</h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full border border-gray-300">
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    <tr>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-300">
+                        Transaction Type
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        {(trade as FXTrade).buySell}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-300">
+                        Base Currency
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        {(trade as FXTrade).baseCurrency}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-300">
+                        Term Currency
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        {(trade as FXTrade).termCurrency}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-300">
+                        Dealt Currency
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        {(trade as FXTrade).dealtCurrency}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Contact Information */}
+          <div className="bg-blue-50 p-6 rounded-lg mb-6">
+            <p className="font-bold text-blue-900 mb-2">For any queries regarding this confirmation, please contact:</p>
+            <p className="text-blue-800">Client Services Desk or contact your relationship manager</p>
           </div>
 
           {/* Footer */}
-          <div className="border-t border-gray-300 pt-4">
-            <div className="flex justify-between items-center text-sm text-gray-600">
+          <div className="border-t border-gray-300 pt-6 text-sm text-gray-600">
+            <p className="mb-2">This confirmation is issued in accordance with the terms and conditions governing trading relationships.</p>
+            <div className="flex justify-between">
               <div>
-                <p>Account carried by Raymond James & Associates, Inc. | Member New York Stock Exchange/SIPC</p>
-                <p>880 Carillon Parkway | St. Petersburg, Florida 33716 | 727.567.1000 | raymondjames.com</p>
-              </div>
-              <div className="text-right">
-                <p>Page 1 of 4</p>
+                <p>Document generated on: {new Date().toLocaleDateString()}</p>
+                <p>Reference: {trade.tradeId}-CLIENT</p>
               </div>
             </div>
           </div>
@@ -336,7 +459,7 @@ const ClientLetterModal: React.FC<ClientLetterModalProps> = ({ trade, onClose })
           </button>
           <button
             onClick={handleDownloadPDF}
-            className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
           >
             Download PDF
           </button>

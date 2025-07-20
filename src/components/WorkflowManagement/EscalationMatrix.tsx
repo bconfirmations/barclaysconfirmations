@@ -1,21 +1,14 @@
 import React, { useState } from 'react';
-import { AlertTriangle, Clock, Filter } from 'lucide-react';
+import { AlertTriangle, Clock } from 'lucide-react';
 import { EquityTrade, FXTrade, TradeFilter } from '../../types/trade';
 
 interface EscalationMatrixProps {
   trades: (EquityTrade | FXTrade)[];
-  filter: TradeFilter;
+  escalationFilter: string;
+  onEscalationFilterChange: (filter: string) => void;
 }
 
-const EscalationMatrix: React.FC<EscalationMatrixProps> = ({ trades, filter }) => {
-  const [escalationFilter, setEscalationFilter] = useState<TradeFilter>('all');
-
-  // Apply escalation filter to trades
-  const filteredTrades = trades.filter(trade => {
-    if (escalationFilter === 'all') return true;
-    const isEquityTrade = 'quantity' in trade;
-    return escalationFilter === 'equity' ? isEquityTrade : !isEquityTrade;
-  });
+const EscalationMatrix: React.FC<EscalationMatrixProps> = ({ trades, escalationFilter, onEscalationFilterChange }) => {
 
   // Calculate escalation requirements based on trade status and mock SLA data
   const calculateEscalations = () => {
@@ -25,6 +18,31 @@ const EscalationMatrix: React.FC<EscalationMatrixProps> = ({ trades, filter }) =
       sales: 0,
       middleOffice: 0
     };
+
+    let filteredTrades = trades;
+    
+    // Filter trades based on escalation filter
+    if (escalationFilter !== 'all') {
+      filteredTrades = trades.filter(trade => {
+        const isEquityTrade = 'quantity' in trade;
+        const status = isEquityTrade 
+          ? (trade as EquityTrade).confirmationStatus 
+          : (trade as FXTrade).tradeStatus;
+        
+        switch (escalationFilter) {
+          case 'legal':
+            return status.toLowerCase() === 'failed' || status.toLowerCase() === 'disputed';
+          case 'trading':
+            return status.toLowerCase() === 'pending';
+          case 'sales':
+            return status.toLowerCase() === 'confirmed';
+          case 'middleOffice':
+            return status.toLowerCase() === 'booked';
+          default:
+            return true;
+        }
+      });
+    }
 
     filteredTrades.forEach(trade => {
       const isEquityTrade = 'quantity' in trade;
@@ -65,28 +83,24 @@ const EscalationMatrix: React.FC<EscalationMatrixProps> = ({ trades, filter }) =
           <h3 className="text-lg font-semibold text-gray-900">Potential Escalation Requirements</h3>
         </div>
         
-        {/* Escalation Filter */}
+        {/* Status Filter */}
         <div className="flex items-center space-x-2">
-          <Filter className="w-4 h-4 text-gray-500" />
           <select
             value={escalationFilter}
-            onChange={(e) => setEscalationFilter(e.target.value as TradeFilter)}
+            onChange={(e) => onEscalationFilterChange(e.target.value)}
             className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            <option value="all">All Trades</option>
-            <option value="equity">Equity Trades</option>
-            <option value="fx">FX Trades</option>
+            <option value="all">All Status</option>
+            <option value="legal">Legal</option>
+            <option value="trading">Trading</option>
+            <option value="sales">Sales</option>
+            <option value="middleOffice">Middle Office</option>
           </select>
         </div>
       </div>
       
       <p className="text-sm text-gray-600 mb-4">
         Trades requiring escalation due to missed SLA responses
-        {escalationFilter !== 'all' && (
-          <span className="ml-2 text-blue-600 font-medium">
-            (Filtered: {escalationFilter === 'equity' ? 'Equity' : 'FX'} Trades)
-          </span>
-        )}
       </p>
 
       <div className="overflow-x-auto">
