@@ -263,6 +263,32 @@ const WorkflowManagementTab: React.FC<WorkflowManagementTabProps> = ({
     }
   };
 
+  const getFilteredTradesForList = () => {
+    if (escalationFilter === 'all') {
+      return filteredTrades;
+    }
+    
+    return filteredTrades.filter(trade => {
+      const isEquityTrade = 'quantity' in trade;
+      const status = isEquityTrade 
+        ? (trade as EquityTrade).confirmationStatus 
+        : (trade as FXTrade).tradeStatus;
+      
+      switch (escalationFilter) {
+        case 'legal':
+          return status.toLowerCase() === 'failed' || status.toLowerCase() === 'disputed';
+        case 'trading':
+          return status.toLowerCase() === 'pending';
+        case 'sales':
+          return status.toLowerCase() === 'confirmed';
+        case 'middleOffice':
+          return status.toLowerCase() === 'booked';
+        default:
+          return true;
+      }
+    });
+  };
+
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="mb-6">
@@ -487,39 +513,6 @@ const WorkflowManagementTab: React.FC<WorkflowManagementTabProps> = ({
           </div>
         </div>
 
-        {/* Helper function to filter trades for the list */}
-        {(() => {
-          const getFilteredTradesForList = () => {
-            if (escalationFilter === 'all') {
-              return filteredTrades;
-            }
-            
-            return filteredTrades.filter(trade => {
-              const isEquityTrade = 'quantity' in trade;
-              const status = isEquityTrade 
-                ? (trade as EquityTrade).confirmationStatus 
-                : (trade as FXTrade).tradeStatus;
-              
-              switch (escalationFilter) {
-                case 'legal':
-                  return status.toLowerCase() === 'failed' || status.toLowerCase() === 'disputed';
-                case 'trading':
-                  return status.toLowerCase() === 'pending';
-                case 'sales':
-                  return status.toLowerCase() === 'confirmed';
-                case 'middleOffice':
-                  return status.toLowerCase() === 'booked';
-                default:
-                  return true;
-              }
-            });
-          };
-          
-          const tradesForList = getFilteredTradesForList();
-          
-          return null; // This is just for the function definition
-        })()}
-
         {/* Trades Table */}
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
@@ -543,34 +536,7 @@ const WorkflowManagementTab: React.FC<WorkflowManagementTabProps> = ({
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {(() => {
-                const getFilteredTradesForList = () => {
-                  if (escalationFilter === 'all') {
-                    return filteredTrades;
-                  }
-                  
-                  return filteredTrades.filter(trade => {
-                    const isEquityTrade = 'quantity' in trade;
-                    const status = isEquityTrade 
-                      ? (trade as EquityTrade).confirmationStatus 
-                      : (trade as FXTrade).tradeStatus;
-                    
-                    switch (escalationFilter) {
-                      case 'legal':
-                        return status.toLowerCase() === 'failed' || status.toLowerCase() === 'disputed';
-                      case 'trading':
-                        return status.toLowerCase() === 'pending';
-                      case 'sales':
-                        return status.toLowerCase() === 'confirmed';
-                      case 'middleOffice':
-                        return status.toLowerCase() === 'booked';
-                      default:
-                        return true;
-                    }
-                  });
-                };
-                
-                return getFilteredTradesForList().slice(0, 20).map((trade) => {
+              {getFilteredTradesForList().slice(0, 20).map((trade) => {
                 const isEquityTrade = 'quantity' in trade;
                 const status = isEquityTrade 
                   ? (trade as EquityTrade).confirmationStatus 
@@ -618,57 +584,15 @@ const WorkflowManagementTab: React.FC<WorkflowManagementTabProps> = ({
                     </td>
                   </tr>
                 );
-                });
-              })()}
+              })}
             </tbody>
           </table>
         </div>
 
-        {(() => {
-          const getFilteredTradesForList = () => {
-            if (escalationFilter === 'all') {
-              return filteredTrades;
-            }
-            
-            return filteredTrades.filter(trade => {
-              const isEquityTrade = 'quantity' in trade;
-              const status = isEquityTrade 
-                ? (trade as EquityTrade).confirmationStatus 
-                : (trade as FXTrade).tradeStatus;
-              
-              switch (escalationFilter) {
-                case 'legal':
-                  return status.toLowerCase() === 'failed' || status.toLowerCase() === 'disputed';
-                case 'trading':
-                  return status.toLowerCase() === 'pending';
-                case 'sales':
-                  return status.toLowerCase() === 'confirmed';
-                case 'middleOffice':
-                  return status.toLowerCase() === 'booked';
-                default:
-                  return true;
-              }
-            });
-          };
-          
-          const tradesForList = getFilteredTradesForList();
-          
-          return tradesForList.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">No trades found matching your criteria.</p>
-              <p className="text-gray-400 text-sm mt-2">Try adjusting your filters.</p>
-            </div>
-          ) : null;
-        })()}
-      </div>
-    </div>
-  );
-};
-
-export default WorkflowManagementTab;
+        {getFilteredTradesForList().length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg">No trades found matching your criteria.</p>
-            <p className="text-gray-400 text-sm mt-2">Try adjusting your search terms.</p>
+            <p className="text-gray-400 text-sm mt-2">Try adjusting your filters.</p>
           </div>
         )}
       </div>
