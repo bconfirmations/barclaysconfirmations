@@ -459,20 +459,66 @@ const WorkflowManagementTab: React.FC<WorkflowManagementTabProps> = ({
       </div>
 
       {/* Potential Escalation Requirements */}
-      <EscalationMatrix 
-        trades={filteredTrades} 
-        escalationFilter={escalationFilter}
-        onEscalationFilterChange={setEscalationFilter}
-      />
+      <EscalationMatrix trades={filteredTrades} />
 
       {/* Trades List */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-semibold text-gray-900">All Trades</h3>
-          <span className="text-sm text-gray-500">
-            {filteredTrades.length} trades
-          </span>
+          <div className="flex items-center space-x-4">
+            {/* Escalation Filter */}
+            <div className="flex items-center space-x-2">
+              <label className="text-sm font-medium text-gray-700">Filter by Escalation:</label>
+              <select
+                value={escalationFilter}
+                onChange={(e) => setEscalationFilter(e.target.value)}
+                className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="all">All Trades</option>
+                <option value="legal">Legal Escalation</option>
+                <option value="trading">Trading Escalation</option>
+                <option value="sales">Sales Escalation</option>
+                <option value="middleOffice">Middle Office Escalation</option>
+              </select>
+            </div>
+            <span className="text-sm text-gray-500">
+              {getFilteredTradesForList().length} trades
+            </span>
+          </div>
         </div>
+
+        {/* Helper function to filter trades for the list */}
+        {(() => {
+          const getFilteredTradesForList = () => {
+            if (escalationFilter === 'all') {
+              return filteredTrades;
+            }
+            
+            return filteredTrades.filter(trade => {
+              const isEquityTrade = 'quantity' in trade;
+              const status = isEquityTrade 
+                ? (trade as EquityTrade).confirmationStatus 
+                : (trade as FXTrade).tradeStatus;
+              
+              switch (escalationFilter) {
+                case 'legal':
+                  return status.toLowerCase() === 'failed' || status.toLowerCase() === 'disputed';
+                case 'trading':
+                  return status.toLowerCase() === 'pending';
+                case 'sales':
+                  return status.toLowerCase() === 'confirmed';
+                case 'middleOffice':
+                  return status.toLowerCase() === 'booked';
+                default:
+                  return true;
+              }
+            });
+          };
+          
+          const tradesForList = getFilteredTradesForList();
+          
+          return null; // This is just for the function definition
+        })()}
 
         {/* Trades Table */}
         <div className="overflow-x-auto">
@@ -497,7 +543,34 @@ const WorkflowManagementTab: React.FC<WorkflowManagementTabProps> = ({
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredTrades.slice(0, 20).map((trade) => {
+              {(() => {
+                const getFilteredTradesForList = () => {
+                  if (escalationFilter === 'all') {
+                    return filteredTrades;
+                  }
+                  
+                  return filteredTrades.filter(trade => {
+                    const isEquityTrade = 'quantity' in trade;
+                    const status = isEquityTrade 
+                      ? (trade as EquityTrade).confirmationStatus 
+                      : (trade as FXTrade).tradeStatus;
+                    
+                    switch (escalationFilter) {
+                      case 'legal':
+                        return status.toLowerCase() === 'failed' || status.toLowerCase() === 'disputed';
+                      case 'trading':
+                        return status.toLowerCase() === 'pending';
+                      case 'sales':
+                        return status.toLowerCase() === 'confirmed';
+                      case 'middleOffice':
+                        return status.toLowerCase() === 'booked';
+                      default:
+                        return true;
+                    }
+                  });
+                };
+                
+                return getFilteredTradesForList().slice(0, 20).map((trade) => {
                 const isEquityTrade = 'quantity' in trade;
                 const status = isEquityTrade 
                   ? (trade as EquityTrade).confirmationStatus 
@@ -545,12 +618,54 @@ const WorkflowManagementTab: React.FC<WorkflowManagementTabProps> = ({
                     </td>
                   </tr>
                 );
-              })}
+                });
+              })()}
             </tbody>
           </table>
         </div>
 
-        {filteredTrades.length === 0 && (
+        {(() => {
+          const getFilteredTradesForList = () => {
+            if (escalationFilter === 'all') {
+              return filteredTrades;
+            }
+            
+            return filteredTrades.filter(trade => {
+              const isEquityTrade = 'quantity' in trade;
+              const status = isEquityTrade 
+                ? (trade as EquityTrade).confirmationStatus 
+                : (trade as FXTrade).tradeStatus;
+              
+              switch (escalationFilter) {
+                case 'legal':
+                  return status.toLowerCase() === 'failed' || status.toLowerCase() === 'disputed';
+                case 'trading':
+                  return status.toLowerCase() === 'pending';
+                case 'sales':
+                  return status.toLowerCase() === 'confirmed';
+                case 'middleOffice':
+                  return status.toLowerCase() === 'booked';
+                default:
+                  return true;
+              }
+            });
+          };
+          
+          const tradesForList = getFilteredTradesForList();
+          
+          return tradesForList.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg">No trades found matching your criteria.</p>
+              <p className="text-gray-400 text-sm mt-2">Try adjusting your filters.</p>
+            </div>
+          ) : null;
+        })()}
+      </div>
+    </div>
+  );
+};
+
+export default WorkflowManagementTab;
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg">No trades found matching your criteria.</p>
             <p className="text-gray-400 text-sm mt-2">Try adjusting your search terms.</p>

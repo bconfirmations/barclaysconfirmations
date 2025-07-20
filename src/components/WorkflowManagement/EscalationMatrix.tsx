@@ -4,11 +4,9 @@ import { EquityTrade, FXTrade, TradeFilter } from '../../types/trade';
 
 interface EscalationMatrixProps {
   trades: (EquityTrade | FXTrade)[];
-  escalationFilter: string;
-  onEscalationFilterChange: (filter: string) => void;
 }
 
-const EscalationMatrix: React.FC<EscalationMatrixProps> = ({ trades, escalationFilter, onEscalationFilterChange }) => {
+const EscalationMatrix: React.FC<EscalationMatrixProps> = ({ trades }) => {
 
   // Calculate escalation requirements based on trade status and mock SLA data
   const calculateEscalations = () => {
@@ -19,32 +17,7 @@ const EscalationMatrix: React.FC<EscalationMatrixProps> = ({ trades, escalationF
       middleOffice: 0
     };
 
-    let filteredTrades = trades;
-    
-    // Filter trades based on escalation filter
-    if (escalationFilter !== 'all') {
-      filteredTrades = trades.filter(trade => {
-        const isEquityTrade = 'quantity' in trade;
-        const status = isEquityTrade 
-          ? (trade as EquityTrade).confirmationStatus 
-          : (trade as FXTrade).tradeStatus;
-        
-        switch (escalationFilter) {
-          case 'legal':
-            return status.toLowerCase() === 'failed' || status.toLowerCase() === 'disputed';
-          case 'trading':
-            return status.toLowerCase() === 'pending';
-          case 'sales':
-            return status.toLowerCase() === 'confirmed';
-          case 'middleOffice':
-            return status.toLowerCase() === 'booked';
-          default:
-            return true;
-        }
-      });
-    }
-
-    filteredTrades.forEach(trade => {
+    trades.forEach(trade => {
       const isEquityTrade = 'quantity' in trade;
       const status = isEquityTrade 
         ? (trade as EquityTrade).confirmationStatus 
@@ -81,21 +54,6 @@ const EscalationMatrix: React.FC<EscalationMatrixProps> = ({ trades, escalationF
         <div className="flex items-center space-x-2">
           <AlertTriangle className="w-6 h-6 text-orange-500" />
           <h3 className="text-lg font-semibold text-gray-900">Potential Escalation Requirements</h3>
-        </div>
-        
-        {/* Status Filter */}
-        <div className="flex items-center space-x-2">
-          <select
-            value={escalationFilter}
-            onChange={(e) => onEscalationFilterChange(e.target.value)}
-            className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="all">All Status</option>
-            <option value="legal">Legal</option>
-            <option value="trading">Trading</option>
-            <option value="sales">Sales</option>
-            <option value="middleOffice">Middle Office</option>
-          </select>
         </div>
       </div>
       
