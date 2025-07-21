@@ -161,14 +161,25 @@ const WorkflowManagementTab: React.FC<WorkflowManagementTabProps> = ({
     };
     filteredTrades.forEach((trade) => {
       const isEquityTrade = "quantity" in trade;
-      let status = "";
       if (isEquityTrade) {
-        status = (trade as EquityTrade).confirmationStatus;
+        const status = (trade as EquityTrade).confirmationStatus;
+        switch (status) {
+          case "Confirmed":
+            stats.Confirmed++;
+            break;
+          case "Settled":
+            stats.Settled++;
+            break;
+          case "Failed":
+            stats.Failed++;
+            break;
+          case "Pending":
+            stats.Pending++;
+            break;
+        }
       } else {
-        // FXTrade: use tradeStatus and confirmationStatus
-        // Count both tradeStatus and confirmationStatus for completeness
+        // FXTrade: map tradeStatus to confirmation status categories
         const fx = trade as FXTrade;
-        // Count tradeStatus
         switch (fx.tradeStatus) {
           case "Settled":
             stats.Settled++;
@@ -180,37 +191,20 @@ const WorkflowManagementTab: React.FC<WorkflowManagementTabProps> = ({
           case "Cancelled":
             stats.Failed++;
             break;
+          default:
+            // For other statuses, check confirmationStatus
+            switch (fx.confirmationStatus) {
+              case "Confirmed":
+                stats.Confirmed++;
+                break;
+              case "Pending":
+                stats.Pending++;
+                break;
+              case "Disputed":
+                stats.Disputed++;
+                break;
+            }
         }
-        // Count confirmationStatus
-        switch (fx.confirmationStatus) {
-          case "Confirmed":
-            stats.Confirmed++;
-            break;
-          case "Pending":
-            stats.Pending++;
-            break;
-          case "Disputed":
-            stats.Disputed++;
-            break;
-        }
-        return;
-      }
-      switch (status) {
-        case "Confirmed":
-          stats.Confirmed++;
-          break;
-        case "Settled":
-          stats.Settled++;
-          break;
-        case "Failed":
-          stats.Failed++;
-          break;
-        case "Disputed":
-          stats.Disputed++;
-          break;
-        case "Pending":
-          stats.Pending++;
-          break;
       }
     });
     return stats;
