@@ -1,14 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import Header from './components/Layout/Header';
 import TabNavigation from './components/Layout/TabNavigation';
 import TradeConfirmationsTab from './components/TradeConfirmations/TradeConfirmationsTab';
 import WorkflowManagementTab from './components/WorkflowManagement/WorkflowManagementTab';
+import FileUploadModal from './components/DataManagement/FileUploadModal';
 import { useTradeData } from './hooks/useTradeData';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, Upload } from 'lucide-react';
+import { EquityTrade, FXTrade } from './types/trade';
 
 function App() {
   const [activeTab, setActiveTab] = useState<'confirmations' | 'workflow'>('confirmations');
-  const { equityTrades, fxTrades, loading, error } = useTradeData();
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const { equityTrades, fxTrades, loading, error, updateTradeData } = useTradeData();
+
+  const handleDataUpdate = useCallback((newEquityTrades: EquityTrade[], newFxTrades: FXTrade[]) => {
+    updateTradeData(newEquityTrades, newFxTrades);
+  }, [updateTradeData]);
 
   if (loading) {
     return (
@@ -41,7 +48,20 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+      <div className="border-b border-gray-200 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-center">
+            <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+            <button
+              onClick={() => setShowUploadModal(true)}
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors my-2"
+            >
+              <Upload className="w-4 h-4" />
+              <span>Upload Data</span>
+            </button>
+          </div>
+        </div>
+      </div>
       
       <main>
         {activeTab === 'confirmations' ? (
@@ -56,6 +76,15 @@ function App() {
           />
         )}
       </main>
+
+      {showUploadModal && (
+        <FileUploadModal
+          onClose={() => setShowUploadModal(false)}
+          onDataUpdate={handleDataUpdate}
+          currentEquityTrades={equityTrades}
+          currentFxTrades={fxTrades}
+        />
+      )}
     </div>
   );
 }

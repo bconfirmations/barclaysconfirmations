@@ -1,14 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { EquityTrade, FXTrade } from '../types/trade';
 import { parseEquityTradesCSV, parseFXTradesCSV } from '../utils/csvParser';
 
-export const useTradeData = () => {
-  const [equityTrades, setEquityTrades] = useState<EquityTrade[]>([]);
-  const [fxTrades, setFxTrades] = useState<FXTrade[]>([]);
+export const useTradeData = (initialEquityTrades?: EquityTrade[], initialFxTrades?: FXTrade[]) => {
+  const [equityTrades, setEquityTrades] = useState<EquityTrade[]>(initialEquityTrades || []);
+  const [fxTrades, setFxTrades] = useState<FXTrade[]>(initialFxTrades || []);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // If initial data is provided, don't load from CSV
+    if (initialEquityTrades && initialFxTrades) {
+      setLoading(false);
+      return;
+    }
+
     const loadTradeData = async () => {
       try {
         setLoading(true);
@@ -37,5 +43,10 @@ export const useTradeData = () => {
     loadTradeData();
   }, []);
 
-  return { equityTrades, fxTrades, loading, error };
+  const updateTradeData = useCallback((newEquityTrades: EquityTrade[], newFxTrades: FXTrade[]) => {
+    setEquityTrades(newEquityTrades);
+    setFxTrades(newFxTrades);
+  }, []);
+
+  return { equityTrades, fxTrades, loading, error, updateTradeData };
 };
