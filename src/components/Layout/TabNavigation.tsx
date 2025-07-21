@@ -32,7 +32,6 @@ const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabChange })
         <span>Workflow Management</span>
       </button>
     </div>
-      </div>
   );
 };
 
