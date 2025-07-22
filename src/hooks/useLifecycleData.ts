@@ -11,14 +11,14 @@ export const useLifecycleData = () => {
     const allTrades = [...equityTrades, ...fxTrades];
     
     const newLifecycles: TradeLifecycle[] = allTrades.map(trade => {
-      const tradeTimestamp = new Date().toISOString();
       const isEquityTrade = 'quantity' in trade;
       const confirmationStatus = isEquityTrade 
         ? (trade as EquityTrade).confirmationStatus 
         : (trade as FXTrade).tradeStatus;
       
       // Simulate different stages based on confirmation status
-      const getTeamStatuses = (status: string, baseTime: string) => {
+      const getTeamStatuses = (status: string) => {
+        const baseTime = new Date().toISOString();
         
         switch (status.toLowerCase()) {
           case 'settled':
@@ -80,7 +80,7 @@ export const useLifecycleData = () => {
         }
       };
 
-      const teamStatuses = getTeamStatuses(confirmationStatus, tradeTimestamp);
+      const teamStatuses = getTeamStatuses(confirmationStatus);
       
       return {
         tradeId: trade.tradeId,
@@ -89,46 +89,46 @@ export const useLifecycleData = () => {
           costManagement: {
             teamName: 'Cost Management Team',
             ...teamStatuses.costManagement,
-            lastUpdated: tradeTimestamp
+            lastUpdated: baseTime
           },
           networkManagement: {
             teamName: 'Network Management Team',
             ...teamStatuses.networkManagement,
-            lastUpdated: tradeTimestamp
+            lastUpdated: baseTime
           },
           referenceData: {
             teamName: 'Reference Data Team',
             ...teamStatuses.referenceData,
-            lastUpdated: tradeTimestamp
+            lastUpdated: baseTime
           },
           collateralManagement: {
             teamName: 'Collateral Management Team',
             ...teamStatuses.collateralManagement,
-            lastUpdated: tradeTimestamp
+            lastUpdated: baseTime
           },
           confirmations: {
             teamName: 'Confirmations Team',
             ...teamStatuses.confirmations,
-            lastUpdated: tradeTimestamp
+            lastUpdated: baseTime
           },
           settlements: {
             teamName: 'Settlements Team',
             ...teamStatuses.settlements,
-            lastUpdated: tradeTimestamp
+            lastUpdated: baseTime
           },
           regulatoryAdherence: {
             teamName: 'Regulatory Adherence Team',
             ...teamStatuses.regulatoryAdherence,
-            lastUpdated: tradeTimestamp
+            lastUpdated: baseTime
           },
           middleOffice: {
             teamName: 'Middle Office Team',
             ...teamStatuses.middleOffice,
-            lastUpdated: tradeTimestamp
+            lastUpdated: baseTime
           }
         },
-        createdAt: tradeTimestamp,
-        lastModified: tradeTimestamp
+        createdAt: baseTime,
+        lastModified: baseTime
       };
     });
 
