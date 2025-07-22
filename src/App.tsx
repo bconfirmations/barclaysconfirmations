@@ -8,12 +8,10 @@ import { useTradeData } from './hooks/useTradeData';
 import { useLifecycleData } from './hooks/useLifecycleData';
 import { Loader2, AlertCircle, Upload } from 'lucide-react';
 import { EquityTrade, FXTrade } from './types/trade';
-import LifecycleSimulator from './components/Lifecycle/LifecycleSimulator';
 
 function App() {
   const [activeTab, setActiveTab] = useState<'confirmations' | 'workflow'>('confirmations');
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [showLifecycleSimulator, setShowLifecycleSimulator] = useState(false);
   const { equityTrades, fxTrades, loading, error, updateTradeData } = useTradeData();
   const { lifecycles, initializeLifecycles, simulateExternalUpdate } = useLifecycleData();
 
