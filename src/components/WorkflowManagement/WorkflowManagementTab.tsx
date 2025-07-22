@@ -2,17 +2,21 @@ import React, { useState, useMemo } from "react";
 import { EquityTrade, FXTrade, TradeFilter } from "../../types/trade";
 import { BarChart3, PieChart } from "lucide-react";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import { TradeLifecycle } from "../../types/lifecycle";
 import EscalationMatrix from "./EscalationMatrix";
 import TradesList from "./TradesList";
+import LifecycleIndicator from "../Lifecycle/LifecycleIndicator";
 
 interface WorkflowManagementTabProps {
   equityTrades: EquityTrade[];
   fxTrades: FXTrade[];
+  lifecycles: TradeLifecycle[];
 }
 
 const WorkflowManagementTab: React.FC<WorkflowManagementTabProps> = ({
   equityTrades,
   fxTrades,
+  lifecycles,
 }) => {
   const [filter, setFilter] = useState<TradeFilter>("all");
   const [escalationFilter, setEscalationFilter] = useState("all");
@@ -651,6 +655,35 @@ const WorkflowManagementTab: React.FC<WorkflowManagementTabProps> = ({
             </button>
           </div>
         </div>
+        
+        {/* Lifecycle Overview */}
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+          <h4 className="text-sm font-medium text-blue-900 mb-3">
+            Trade Lifecycle Overview
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {['Cost Management Team', 'Network Management Team', 'Reference Data Team', 'Collateral Management Team'].map(stage => {
+              const count = lifecycles.filter(l => l.currentStage === stage).length;
+              return (
+                <div key={stage} className="text-center">
+                  <div className="text-lg font-bold text-blue-800">{count}</div>
+                  <div className="text-xs text-blue-600">{stage.replace(' Team', '')}</div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-2">
+            {['Confirmations Team', 'Settlements Team', 'Regulatory Adherence Team', 'Middle Office Team'].map(stage => {
+              const count = lifecycles.filter(l => l.currentStage === stage).length;
+              return (
+                <div key={stage} className="text-center">
+                  <div className="text-lg font-bold text-blue-800">{count}</div>
+                  <div className="text-xs text-blue-600">{stage.replace(' Team', '')}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {/* Confirmation Status Distribution Card */}
@@ -1061,6 +1094,9 @@ const WorkflowManagementTab: React.FC<WorkflowManagementTabProps> = ({
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Next Action Owner
                     </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Lifecycle Stage
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -1093,6 +1129,8 @@ const WorkflowManagementTab: React.FC<WorkflowManagementTabProps> = ({
                         }
                       };
 
+                      const nextActionOwner = getNextActionOwner(trade);
+
                       return (
                         <tr key={trade.tradeId} className="hover:bg-gray-50">
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -1117,7 +1155,20 @@ const WorkflowManagementTab: React.FC<WorkflowManagementTabProps> = ({
                             {tradeDate}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                            {getNextActionOwner(trade)}
+                            {nextActionOwner}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {lifecycles.find(l => l.tradeId === trade.tradeId) && (
+                              <div className="text-xs">
+                                <div className="font-medium text-gray-800">
+                                  {lifecycles.find(l => l.tradeId === trade.tradeId)?.currentStage.replace(' Team', '')}
+                                </div>
+                                <LifecycleIndicator 
+                                  lifecycle={lifecycles.find(l => l.tradeId === trade.tradeId)!} 
+                                  compact 
+                                />
+                              </div>
+                            )}
                           </td>
                         </tr>
                       );
