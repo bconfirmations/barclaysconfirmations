@@ -3,12 +3,15 @@ import { Eye, Download, Calendar, Building, User, AlertCircle } from 'lucide-rea
 import { EquityTrade, FXTrade } from '../../types/trade';
 import { generateTradePDF } from '../../utils/pdfGenerator';
 import TradeDetailsModal from './TradeDetailsModal';
+import LifecycleIndicator from '../Lifecycle/LifecycleIndicator';
+import { TradeLifecycle } from '../../types/lifecycle';
 
 interface TradeCardProps {
   trade: EquityTrade | FXTrade;
+  lifecycle?: TradeLifecycle;
 }
 
-const TradeCard: React.FC<TradeCardProps> = ({ trade }) => {
+const TradeCard: React.FC<TradeCardProps> = ({ trade, lifecycle }) => {
   const [showDetails, setShowDetails] = useState(false);
   const isEquityTrade = 'quantity' in trade;
   
@@ -101,6 +104,15 @@ const TradeCard: React.FC<TradeCardProps> = ({ trade }) => {
               <span className="text-sm font-medium">
                 {(trade as FXTrade).productType}
               </span>
+            </div>
+          </div>
+        )}
+
+        {lifecycle && (
+          <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+            <LifecycleIndicator lifecycle={lifecycle} compact />
+            <div className="mt-2 text-xs text-gray-600">
+              Current Stage: <span className="font-medium">{lifecycle.currentStage}</span>
             </div>
           </div>
         )}

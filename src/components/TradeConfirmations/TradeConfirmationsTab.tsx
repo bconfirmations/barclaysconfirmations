@@ -2,10 +2,12 @@ import React, { useState, useMemo } from "react";
 import { EquityTrade, FXTrade } from "../../types/trade";
 import TradeFilters from "./TradeFilters";
 import TradeCard from "./TradeCard";
+import { TradeLifecycle } from "../../types/lifecycle";
 
 interface TradeConfirmationsTabProps {
   equityTrades: EquityTrade[];
   fxTrades: FXTrade[];
+  lifecycles: TradeLifecycle[];
 }
 
 // Pie chart helper for the date analysis card
@@ -105,6 +107,7 @@ const PieChart = ({
 const TradeConfirmationsTab: React.FC<TradeConfirmationsTabProps> = ({
   equityTrades,
   fxTrades,
+  lifecycles,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -501,7 +504,11 @@ const TradeConfirmationsTab: React.FC<TradeConfirmationsTabProps> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredTrades.map((trade) => (
-          <TradeCard key={trade.tradeId} trade={trade} />
+          <TradeCard 
+            key={trade.tradeId} 
+            trade={trade} 
+            lifecycle={lifecycles.find(l => l.tradeId === trade.tradeId)}
+          />
         ))}
       </div>
 
