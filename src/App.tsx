@@ -70,13 +70,6 @@ function App() {
               <Upload className="w-4 h-4" />
               <span>Upload Data</span>
             </button>
-            <button
-              onClick={() => setShowLifecycleSimulator(true)}
-              className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors my-2"
-            >
-              <span>🔄</span>
-              <span>Lifecycle Simulator</span>
-            </button>
           </div>
         </div>
       </div>
