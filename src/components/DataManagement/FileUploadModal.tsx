@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { X, Upload, FileSpreadsheet, Edit3, Save, Trash2, Plus } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { EquityTrade, FXTrade } from '../../types/trade';
+import { parseEquityTradesCSV, parseFXTradesCSV, parseCSV, detectTradeType } from '../../utils/csvParser';
 
 interface FileUploadModalProps {
   onClose: () => void;
@@ -48,28 +49,46 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
 
   const handleFiles = (files: FileList) => {
     Array.from(files).forEach(file => {
-      if (file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
-          file.type === 'application/vnd.ms-excel' ||
-          file.name.endsWith('.xlsx') || 
-          file.name.endsWith('.xls')) {
+      const isExcel = file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
+                     file.type === 'application/vnd.ms-excel' ||
+                     file.name.endsWith('.xlsx') || 
+                     file.name.endsWith('.xls');
+      
+      const isCSV = file.type === 'text/csv' || 
+                    file.name.endsWith('.csv');
+      
+      if (isExcel || isCSV) {
         
         const reader = new FileReader();
         reader.onload = (e) => {
           try {
-            const data = new Uint8Array(e.target?.result as ArrayBuffer);
-            const workbook = XLSX.read(data, { type: 'array' });
-            const sheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[sheetName];
-            const jsonData = XLSX.utils.sheet_to_json(worksheet);
+            let jsonData: any[] = [];
             
-            // Determine if it's equity or FX based on columns
-            const firstRow = jsonData[0] as any;
-            const isEquity = firstRow && ('quantity' in firstRow || 'Quantity' in firstRow || 'clientId' in firstRow || 'Client ID' in firstRow);
+            if (isExcel) {
+              // Handle Excel files
+              const data = new Uint8Array(e.target?.result as ArrayBuffer);
+              const workbook = XLSX.read(data, { type: 'array' });
+              const sheetName = workbook.SheetNames[0];
+              const worksheet = workbook.Sheets[sheetName];
+              jsonData = XLSX.utils.sheet_to_json(worksheet);
+            } else if (isCSV) {
+              // Handle CSV files
+              const csvText = e.target?.result as string;
+              jsonData = parseCSV(csvText);
+            }
+            
+            if (jsonData.length === 0) {
+              alert('The file appears to be empty or invalid.');
+              return;
+            }
+            
+            // Auto-detect trade type based on column headers
+            const tradeType = detectTradeType(jsonData);
             
             const newFile = {
               name: file.name,
               data: jsonData,
-              type: isEquity ? 'equity' as const : 'fx' as const,
+              type: tradeType,
               id: Date.now().toString() + Math.random().toString(36).substr(2, 9)
             };
             
@@ -79,9 +98,9 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
             alert('Error reading file. Please ensure it\'s a valid Excel file.');
           }
         };
-        reader.readAsArrayBuffer(file);
+        isExcel ? reader.readAsArrayBuffer(file) : reader.readAsText(file);
       } else {
-        alert('Please upload only Excel files (.xlsx or .xls)');
+        alert('Please upload only Excel files (.xlsx, .xls) or CSV files (.csv)');
       }
     });
   };
@@ -150,47 +169,32 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
 
   const convertToTradeFormat = (data: any[], type: 'equity' | 'fx'): EquityTrade[] | FXTrade[] => {
     if (type === 'equity') {
-      return data.map((row, index) => ({
-        tradeId: row['Trade ID'] || row['tradeId'] || `UPLOAD-${Date.now()}-${index}`,
-        orderId: row['Order ID'] || row['orderId'] || `ORDER-${Date.now()}-${index}`,
-        clientId: row['Client ID'] || row['clientId'] || `CLIENT-${index}`,
-        tradeType: (row['Trade Type'] || row['tradeType'] || 'Buy') as 'Buy' | 'Sell',
-        quantity: parseInt(row['Quantity'] || row['quantity'] || '0'),
-        price: parseFloat(row['Price'] || row['price'] || '0'),
-        tradeValue: parseFloat(row['Trade Value'] || row['tradeValue'] || '0'),
-        currency: row['Currency'] || row['currency'] || 'USD',
-        tradeDate: row['Trade Date'] || row['tradeDate'] || new Date().toLocaleDateString(),
-        settlementDate: row['Settlement Date'] || row['settlementDate'] || new Date().toLocaleDateString(),
-        counterparty: row['Counterparty'] || row['counterparty'] || 'Unknown',
-        tradingVenue: row['Trading Venue'] || row['tradingVenue'] || 'NYSE',
-        traderName: row['Trader Name'] || row['traderName'] || 'Trader A',
-        confirmationStatus: (row['Confirmation Status'] || row['confirmationStatus'] || 'Pending') as 'Confirmed' | 'Pending' | 'Failed' | 'Settled',
-        countryOfTrade: row['Country of Trade'] || row['countryOfTrade'] || 'US',
-        opsTeamNotes: row['Ops Team Notes'] || row['opsTeamNotes'] || 'Clean'
-      })) as EquityTrade[];
+      // Convert raw data to CSV format and use enhanced parser
+      const csvData = convertDataToCSV(data);
+      return parseEquityTradesCSV(csvData);
     } else {
-      return data.map((row, index) => ({
-        tradeId: row['TradeID'] || row['Trade ID'] || row['tradeId'] || `FX-${Date.now()}-${index}`,
-        tradeDate: row['TradeDate'] || row['Trade Date'] || row['tradeDate'] || new Date().toLocaleDateString(),
-        valueDate: row['ValueDate'] || row['Value Date'] || row['valueDate'] || new Date().toLocaleDateString(),
-        tradeTime: row['TradeTime'] || row['Trade Time'] || row['tradeTime'] || '09:00:00',
-        traderId: row['TraderID'] || row['Trader ID'] || row['traderId'] || `TDR${index}`,
-        counterparty: row['Counterparty'] || row['counterparty'] || 'Unknown',
-        currencyPair: row['CurrencyPair'] || row['Currency Pair'] || row['currencyPair'] || 'USD/EUR',
-        buySell: (row['BuySell'] || row['Buy/Sell'] || row['buySell'] || 'Buy') as 'Buy' | 'Sell',
-        dealtCurrency: row['DealtCurrency'] || row['Dealt Currency'] || row['dealtCurrency'] || 'USD',
-        baseCurrency: row['BaseCurrency'] || row['Base Currency'] || row['baseCurrency'] || 'USD',
-        termCurrency: row['TermCurrency'] || row['Term Currency'] || row['termCurrency'] || 'EUR',
-        tradeStatus: (row['TradeStatus'] || row['Trade Status'] || row['tradeStatus'] || 'Booked') as 'Booked' | 'Confirmed' | 'Settled' | 'Cancelled',
-        productType: (row['ProductType'] || row['Product Type'] || row['productType'] || 'Spot') as 'Spot' | 'Forward' | 'Swap',
-        maturityDate: row['MaturityDate'] || row['Maturity Date'] || row['maturityDate'],
-        confirmationTimestamp: row['ConfirmationTimestamp'] || row['Confirmation Timestamp'] || row['confirmationTimestamp'] || new Date().toISOString(),
-        settlementDate: row['SettlementDate'] || row['Settlement Date'] || row['settlementDate'] || new Date().toLocaleDateString(),
-        amendmentFlag: (row['AmendmentFlag'] || row['Amendment Flag'] || row['amendmentFlag'] || 'No') as 'Yes' | 'No',
-        confirmationMethod: (row['ConfirmationMethod'] || row['Confirmation Method'] || row['confirmationMethod'] || 'Electronic') as 'SWIFT' | 'Email' | 'Manual' | 'Electronic',
-        confirmationStatus: (row['ConfirmationStatus'] || row['Confirmation Status'] || row['confirmationStatus'] || 'Pending') as 'Confirmed' | 'Pending' | 'Disputed'
-      })) as FXTrade[];
+      // Convert raw data to CSV format and use enhanced parser
+      const csvData = convertDataToCSV(data);
+      return parseFXTradesCSV(csvData);
     }
+  };
+
+  // Helper function to convert JSON data back to CSV format for parsing
+  const convertDataToCSV = (data: any[]): string => {
+    if (data.length === 0) return '';
+    
+    const headers = Object.keys(data[0]);
+    const csvRows = [headers.join(',')];
+    
+    data.forEach(row => {
+      const values = headers.map(header => {
+        const value = row[header] || '';
+        return typeof value === 'string' && value.includes(',') ? `"${value}"` : value;
+      });
+      csvRows.push(values.join(','));
+    });
+    
+    return csvRows.join('\n');
   };
 
   const applyChanges = () => {
@@ -242,15 +246,15 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
           >
             <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p className="text-lg font-medium text-gray-900 mb-2">
-              Upload Excel Files
+              Upload Trade Data Files
             </p>
             <p className="text-gray-600 mb-4">
-              Drag and drop your Excel files here, or click to browse
+              Supports Excel (.xlsx, .xls) and CSV (.csv) files with automatic trade type detection
             </p>
             <input
               type="file"
               multiple
-              accept=".xlsx,.xls"
+              accept=".xlsx,.xls,.csv"
               onChange={handleFileInput}
               className="hidden"
               id="file-upload"
@@ -284,6 +288,9 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
                         </span>
                         <span className="text-sm text-gray-500">
                           {file.data.length} rows
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          Auto-detected: {file.type === 'equity' ? 'Equity Trades' : 'FX Trades'}
                         </span>
                       </div>
                       <div className="flex space-x-2">

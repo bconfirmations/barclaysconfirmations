@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { EquityTrade, FXTrade } from '../types/trade';
-import { parseEquityTradesCSV, parseFXTradesCSV } from '../utils/csvParser';
+import { parseEquityTradesCSV, parseFXTradesCSV, detectTradeType } from '../utils/csvParser';
 
 export const useTradeData = (initialEquityTrades?: EquityTrade[], initialFxTrades?: FXTrade[]) => {
   const [equityTrades, setEquityTrades] = useState<EquityTrade[]>(initialEquityTrades || []);
@@ -46,6 +46,13 @@ export const useTradeData = (initialEquityTrades?: EquityTrade[], initialFxTrade
   const updateTradeData = useCallback((newEquityTrades: EquityTrade[], newFxTrades: FXTrade[]) => {
     setEquityTrades(newEquityTrades);
     setFxTrades(newFxTrades);
+    
+    // Log the update for debugging
+    console.log('Trade data updated:', {
+      equityCount: newEquityTrades.length,
+      fxCount: newFxTrades.length,
+      total: newEquityTrades.length + newFxTrades.length
+    });
   }, []);
 
   return { equityTrades, fxTrades, loading, error, updateTradeData };
