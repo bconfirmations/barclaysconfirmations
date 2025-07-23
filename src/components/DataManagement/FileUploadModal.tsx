@@ -401,9 +401,9 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
           {uploadedFiles.length > 0 && (
             <button
               onClick={applyChanges}
-              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+             className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
             >
-              Apply Changes ({uploadedFiles.reduce((sum, file) => sum + file.data.length, 0)} new trades)
+             Save & Apply Changes ({uploadedFiles.reduce((sum, file) => sum + file.data.length, 0)} new trades)
             </button>
           )}
         </div>
