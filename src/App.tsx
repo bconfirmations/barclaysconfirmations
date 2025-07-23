@@ -11,19 +11,16 @@ import { EquityTrade, FXTrade } from './types/trade';
 function App() {
   const [activeTab, setActiveTab] = useState<'confirmations' | 'workflow'>('confirmations');
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const { equityTrades, fxTrades, loading, error, updateTradeData, clearSavedData } = useTradeData();
+  const { equityTrades, fxTrades, loading, error, updateTradeData } = useTradeData();
 
   const handleDataUpdate = useCallback((newEquityTrades: EquityTrade[], newFxTrades: FXTrade[]) => {
     updateTradeData(newEquityTrades, newFxTrades);
   }, [updateTradeData]);
 
-  const handleResetData = useCallback(() => {
-    clearSavedData();
-  }, [clearSavedData]);
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header onResetData={handleResetData} />
+        <Header />
         <div className="flex items-center justify-center h-96">
           <div className="flex items-center space-x-3">
             <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
@@ -37,7 +34,7 @@ function App() {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header onResetData={handleResetData} />
+        <Header />
         <div className="flex items-center justify-center h-96">
           <div className="flex items-center space-x-3 text-orange-600">
             <AlertCircle className="w-8 h-8" />
@@ -50,7 +47,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header onResetData={handleResetData} />
+      <Header />
       <div className="border-b border-gray-200 bg-white">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center">
